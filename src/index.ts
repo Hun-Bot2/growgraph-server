@@ -286,13 +286,13 @@ app.post('/api/generate-mindmap', async (req, res) => {
 - Target Salary: ${userData.salary}
 - Role Model: ${userData.roleModel}
 
-Generate 6-8 specific job titles that match their goals and MBTI preferences. 
+Generate 6-8 specific job titles IN KOREAN with time estimates that match their goals and MBTI preferences. 
 
 Return JSON format:
 {
   "nodes": [
-    { "id": "1", "data": { "label": "[Main Career Goal]" }, "position": { "x": 0, "y": 0 } },
-    { "id": "2", "data": { "label": "[Specific Job Title]" }, "position": { "x": -200, "y": -150 } }
+    { "id": "1", "data": { "label": "[Main Career Goal in Korean]" }, "position": { "x": 0, "y": 0 } },
+    { "id": "2", "data": { "label": "[Korean Job Title] (경력 X년)" }, "position": { "x": -200, "y": -150 } }
     // ... 5-7 more job nodes around the center
   ],
   "edges": [
@@ -301,7 +301,12 @@ Return JSON format:
   ]
 }
 
-Use specific job titles like "Senior Product Manager" or "UX Research Lead", not generic terms.`;
+IMPORTANT: 
+- All job titles must be in Korean with proper nouns (company names, people names, technologies) in English
+- Add time estimate in parentheses: "(신입)", "(경력 2-3년)", "(경력 5년+)", "(경력 10년+)" 
+- Examples: "시니어 Product Manager (경력 5년+)", "UX 리서처 (경력 2-3년)", "Google 소프트웨어 엔지니어 (경력 3년+)"
+- Use specific Korean job titles with English proper nouns where appropriate`;
+
 
     try {
       const result = await retryWithBackoff(async () => {
@@ -439,7 +444,15 @@ app.post('/api/suggestions', async (req, res) => {
   try {
     const { nodeContent } = req.body;
     
-    const prompt = `Expand "${nodeContent}" into 8-12 specific related job titles or career paths. Return only a JSON array of strings. No explanations.`;
+    const prompt = `Expand "${nodeContent}" into 8-12 specific related job titles or career paths IN KOREAN with time estimates. 
+
+Return only a JSON array of Korean strings with English proper nouns and time estimates.
+
+Format: ["Korean Job Title (경력 X년)", "Another Korean Job Title (신입)", ...]
+
+Example: ["시니어 Software Engineer (경력 5년+)", "Google Product Manager (경력 3-5년)", "스타트업 CTO (경력 10년+)"]
+
+IMPORTANT: Keep company names, technologies, and proper nouns in English within Korean job titles.`;
     
     try {
       const completion = await openai.chat.completions.create({
@@ -483,22 +496,32 @@ app.post('/api/career-details', async (req, res) => {
   try {
     const { careerTitle } = req.body;
     
-    const prompt = `Career info for "${careerTitle}" in JSON:
+    const prompt = `Career info for "${careerTitle}" in JSON with Korean content:
 
 {
   "title": "${careerTitle}",
-  "averageSalary": "Global salary range (entry/senior)",
+  "averageSalary": "한국 기준 연봉 (신입: X만원, 경력: X만원, 시니어: X만원)",
   "requirements": {
-    "education": ["Required education"],
-    "certifications": ["Key skills/certs"],
-    "experience": ["Experience needed"]
+    "education": ["한국어로 학력 요구사항"],
+    "certifications": ["한국어로 자격증/기술 요구사항 (영어 기술명 유지)"],
+    "experience": ["한국어로 경력 요구사항"]
   },
-  "description": "What this job does",
+  "description": "한국어로 직무 설명",
   "relatedCompanies": ["Major companies hiring this role"],
-  "roleModels": ["Notable professionals in field"]
+  "roleModels": ["Notable professionals with Korean description"],
+  "timeToReach": {
+    "신입": "경력 0년",
+    "주니어": "경력 1-3년", 
+    "시니어": "경력 5-7년",
+    "리드": "경력 8년+"
+  }
 }
 
-Be concise and practical.`;
+IMPORTANT: 
+- Provide all content in Korean except company names, people names, and technology names
+- Add realistic time estimates for career progression
+- Include Korean salary information
+- Keep proper nouns (Apple, Google, React, Python, etc.) in English`;
     
     try {
       const result = await retryWithBackoff(async () => {
