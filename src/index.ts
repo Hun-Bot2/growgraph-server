@@ -338,41 +338,35 @@ IMPORTANT:
       }
 
       const mindMap = JSON.parse(cleanedJsonString);
+      console.log('[SERVER] Parsed mindMap:', mindMap);
+      
       // 노드 data 보정: data가 없거나 label이 없으면 최대한 다양한 경우를 보정
       if (Array.isArray(mindMap.nodes)) {
+        console.log('[SERVER] Original edges:', mindMap.edges);
+        
+        // Initialize empty edges array - edges will be created when user adds nodes
+        mindMap.edges = [];
+        
+        // Process nodes
         mindMap.nodes = mindMap.nodes.map((node: any, idx: number) => {
           let label = node.id;
-          // 1. data가 객체이고 label이 있으면 label 사용
           if (node.data && typeof node.data === 'object' && 'label' in node.data && node.data.label) {
             label = node.data.label;
           }
-          // 2. data가 문자열이면 label로 사용
-          else if (typeof node.data === 'string' && node.data) {
-            label = node.data;
-          }
-          // 3. data가 배열이고 첫 번째 값이 문자열이면 label로 사용
-          else if (Array.isArray(node.data) && typeof node.data[0] === 'string') {
-            label = node.data[0];
-          }
-          // 4. name, title, text, value 등의 필드가 있으면 label로 사용
-          else if (node.data && typeof node.data === 'object') {
-            if (node.data.name) label = node.data.name;
-            else if (node.data.title) label = node.data.title;
-            else if (node.data.text) label = node.data.text;
-            else if (node.data.value) label = node.data.value;
-          }
-          // 5. id가 있으면 id 사용, 아니면 fallback
-          else if (node.id) {
-            label = node.id;
-          } else {
-            label = 'No Label';
-          }
-          // 디버깅용 상세 로그
-          console.log(`[SERVER] node[${idx}] id:`, node.id, 'data:', JSON.stringify(node.data), 'label:', label);
+          console.log(`[SERVER] Processing node[${idx}]:`, {
+            id: node.id,
+            originalData: node.data,
+            finalLabel: label
+          });
           return {
             ...node,
             data: { label }
           };
+        });
+        
+        console.log('[SERVER] Final mindMap:', {
+          nodes: mindMap.nodes.map((n: any) => ({ id: n.id, label: n.data.label })),
+          edges: mindMap.edges
         });
       }
       // 전체 mindMap 구조도 출력
